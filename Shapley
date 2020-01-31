@@ -1,0 +1,90 @@
+{#Prep
+  setwd("D:/")
+  set.seed(100)
+  
+  # Import Data
+  a <- read_excel("Site_Scores_All_Novantis_joined_2_joined.xlsx", sheet = 2)
+  a1 <- read_excel("Site_Scores_All_Novantis_joined_2_joined.xlsx", sheet = 4)
+  a <- cbind(a1[1],a1[188], a)
+  tidy.name.vector <- make.names(colnames(a), unique=TRUE)
+  colnames(a) <- tidy.name.vector
+  b <- na.omit(a)
+  y <- b[2]
+  a <- cbind(b[-c(1:18)])
+  
+  # Clean Data
+  a <- a[, sapply(a, function(col) length(unique(col))) > 1]
+  a <- a[ , apply(a, 2, function(x) !any(is.na(x)))]
+  tidy.name.vector <- make.names(colnames(a), unique=TRUE)
+  colnames(a) <- tidy.name.vector
+  a <- data.frame(scale(a))
+  
+  # Remove Perfect Collinear Variables
+  X <- as.matrix(a)
+  qr.X <- qr(X, tol=1e-9,LAPACK = FALSE)
+  rnkX <- qr.X$rank  ## 4 (number of non-collinear columns)
+  keep <- qr.X$pivot[seq_len(rnkX)]
+  X2 <- X[,keep]
+  a4 <- na.omit(cbind(y,X2,rand =rnorm(nrow(X2)) ))
+  
+  # RandomForest
+  set.seed(100)
+  rf <-randomForest::randomForest(BAW ~ .
+                                         ,data=a4
+                                         ,ntree=1000
+                                         ,importance = TRUE
+                                         ,na.action=na.omit
+  )
+  
+  imp <- data.frame(importance(rf))
+  imp <- add_rownames(imp, "name")
+  imp <- data.frame(imp)
+  bound <- imp$X.IncMSE[imp$name=="rand"]
+  
+  impvariables <- imp %>%
+    filter(X.IncMSE > bound)
+  impvariables1 <- impvariables$name
+  newd <- cbind(BAW=a4$BAW, a4[, impvariables1])
+  
+  set.seed(100)
+  rf1 <-randomForest::randomForest(BAW ~ .
+                                  ,data=newd
+                                  ,ntree=1000
+                                  ,importance = TRUE
+                                  ,na.action=na.omit
+  )
+  
+  fit <- predict(rf1, newd)
+  output <- cbind(b[1], b[2], fit)
+  write.csv(output, "BAWpredict.csv")
+  
+  imp1 <- data.frame(importance(rf1))
+  imp1 <- add_rownames(imp, "name")
+  imp1 <- data.frame(imp)
+  BAW <- write.csv(imp1, "BAWimportance.csv")
+  imp2 <- imp1[order(imp1$X.IncMSE, decreasing = TRUE),]
+  impvariables1 <- imp2$name[1:20]
+  newd1 <- cbind(BAW=a4$BAW, a4[, impvariables1])
+  
+  rf2 <-randomForest::randomForest(BAW ~ .
+                                   ,data=newd1
+                                   ,ntree=1000
+                                   ,importance = TRUE
+                                   ,na.action=na.omit
+  )
+  
+  x <- newd1[which(names(newd1) != "BAW")]
+  predictor = Predictor$new(rf2, data = x, y=newd1$BAW)
+  xx <- data.frame()
+  
+  for (i in 1:nrow(x)){
+    shapley = Shapley$new(predictor, x.interest = x[2,])
+    result <- data.frame(shapley$results)
+    result1 <- cbind(result[,c(1,2,4)], i, b[i,1])
+    xx <- rbind(xx,result1)
+    print(i)
+    Sys.sleep(0.01)
+    flush.console()
+  }
+  
+  write.csv(xx, "BAWShapley.csv")
