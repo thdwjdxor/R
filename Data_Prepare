@@ -1,0 +1,54 @@
+# Remove ROWS with any NA in col
+a = na.omit(a)
+
+#------------------------------------------------------------------------------------------------------#
+
+# Clean-up Column names
+tidy.name.vector <- make.names(colnames(a), unique=TRUE)
+colnames(a) <- tidy.name.vector
+
+#------------------------------------------------------------------------------------------------------#
+
+# Remove column with one value
+a = df1[, sapply(df1, function(col) length(unique(col))) > 1]
+
+#------------------------------------------------------------------------------------------------------#
+
+# Remove Perfectly Collinear Variables
+mod = lm(BUC~. , data=df3)
+
+w = data.frame(mod$coefficients)
+w = rownames_to_column(w, var="name")
+
+w1 = w %>%
+  filter(mod.coefficients < 1000000000000)
+w1 = w1[,1]
+
+bb <- which(colnames(df3) %in% w1)
+X3<- df3[bb]
+
+#------------------------------------------------------------------------------------------------------#
+
+# Stepwise VIF
+df4 = cbind(df3[1], X3)
+i = 100
+vif_num = 3
+
+
+# Stepwise_VIF
+while (i > vif_num) {
+
+mod1 = lm(BUC ~., data=df4)
+vif_df = data.frame(vif(mod1))
+vif_df = rownames_to_column(vif_df, var="name")
+keep = which(vif_df$vif.mod1 != max(vif_df$vif.mod1))
+vif_df = vif_df[keep,]
+b1 = vif_df[,1]
+bb <- which(colnames(df4) %in% b1)
+X3<- df4[bb]
+df4 = cbind(df4[1], X3)
+    
+i = max(vif_df$vif.mod1)
+}
+
+df5 = scale(df4[,-1])
