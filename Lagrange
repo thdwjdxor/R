@@ -1,0 +1,81 @@
+# Minimize function AND constrain function(parameter) to fixed value
+library(Rsolnp)
+
+# minimize fn1 function
+fn1 <- function(x) { # f(x, y) = 5x-3y
+  5*x[1] - 3*x[2]
+}
+
+# Contrain parameter
+eqn1 <- function(x) { 
+  z1=x[1]^2 + x[2]^2
+  return(c(z1))
+}
+constraints = c(136)
+
+x0 <- c(1, 1) # setup initial values
+sol1 <- solnp(x0, fun = fn1, eqfun = eqn1, eqB = constraints)
+
+tail(sol1$values, n=1)
+sol1$pars
+
+#-------------------------------------------------------------------------------------------------#
+# Minimize function AND constrain multiple function(parameter) to fixed values
+fn4 <- function(x)  # f(x, y, z) = 4y-2z
+{
+  4*x[2] - 2*x[3]
+}
+
+# constraint z1: 2x-y-z  = 2 
+# constraint z2: x^2+y^2 = 1
+eqn4 <- function(x){ 
+  z1=2*x[1] - x[2] - x[3]
+  z2=x[1]^2 + x[2]^2
+  
+  return(c(z1, z2))
+}
+constraints4 <- c(2, 1)
+
+x0 <- c(1, 1, 1)
+ctrl <- list(trace=0)
+sol4 <- solnp(x0, fun = fn4, eqfun = eqn4, eqB = constraints4, control=ctrl)
+sol4$values
+
+#-------------------------------------------------------------------------------------------------#
+# Minimize function AND constrain function(parameter) within range
+fn2 <- function(x) {  # f(x, y) = 4x^2 + 10y^2 +5
+  4*x[1]^2 + 10*x[2]^2 +5
+}
+
+# constraint z1: x^2+y^2 <= 4
+ineq2 <- function(x) { 
+  z1=x[1]^2 + x[2]^2
+  return(c(z1))
+}
+
+lh <- c(0)
+uh <- c(4)
+
+x0 = c(1, 1) # setup initial values
+sol2 <- solnp(x0, fun = fn2, ineqfun = ineq2, ineqLB = lh, ineqUB=uh)
+
+
+#-------------------------------------------------------------------------------------------------#
+# Minimize function AND constrain functions(parameter) to fixed values AND constrain parameters within range
+fn3 <- function(x, ...){
+  -x[1]*x[2]*x[3]
+}
+
+eqn3 <- function(x, ...){
+    4*x[1]*x[2]+2*x[2]*x[3]+2*x[3]*x[1]
+    4*x[1]*x[2]+2*x[2]*x[3]
+}
+constraints3 = c(100,50)
+
+lx <- rep(1, 3)
+ux <- rep(10, 3)
+
+pars <- c(2, 1, 7) # setup: Try alternative starting-parameter vector (pars)
+ctrl <- list(TOL=1e-6, trace=0)
+sol3 <- solnp(pars, fun=fn3, eqfun=eqn3, eqB = constraints3, LB=lx, UB=ux, control=ctrl)
+sol2$values
