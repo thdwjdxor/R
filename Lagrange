@@ -106,3 +106,16 @@ x0 = c(1, 1) # setup initial values
 sol2 <- solnp(x0, fun = fn2, ineqfun = ineq2, ineqLB = lh, ineqUB=uh, LB=lx, UB=ux)
 
 sol2$pars
+
+#-------------------------------------------------------------------------------------------------#
+# Constrained Regression, where B1+B2+B3 = 1 : Econometrics
+X <- matrix(runif(300), ncol=3)
+Y <- X %*% c(0.2,0.3,0.5) + rnorm(100, sd=0.2)xx = t(X)%*%X
+invx <- solve(xx)
+b_ols <- (invx) %*% (t(X)%*%Y) #xy/xx
+b_ols
+
+R = matrix(rep(1,3))
+
+f1 = invx %*% R %*% solve(t(R) %*%  invx %*% R)
+f2 = t(R) %*% b_ols -1
