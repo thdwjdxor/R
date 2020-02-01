@@ -110,7 +110,8 @@ sol2$pars
 #-------------------------------------------------------------------------------------------------#
 # Constrained Regression, where B1+B2+B3 = 1 : Econometrics
 X <- matrix(runif(300), ncol=3)
-Y <- X %*% c(0.2,0.3,0.5) + rnorm(100, sd=0.2)xx = t(X)%*%X
+Y <- X %*% c(0.2,0.3,0.5) + rnorm(100, sd=0.2)
+xx = t(X)%*%X
 invx <- solve(xx)
 b_ols <- (invx) %*% (t(X)%*%Y) #xy/xx
 b_ols
