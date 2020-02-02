@@ -108,6 +108,7 @@ sol2 <- solnp(x0, fun = fn2, ineqfun = ineq2, ineqLB = lh, ineqUB=uh, LB=lx, UB=
 sol2$pars
 
 #-------------------------------------------------------------------------------------------------#
+# Restriction regression is same as omitted regression
 # Constrained Regression, where B1+B2+B3 = 1 : Econometrics
 X <- matrix(runif(300), ncol=3)
 Y <- X %*% c(0.2,0.3,0.5) + rnorm(100, sd=0.2)
