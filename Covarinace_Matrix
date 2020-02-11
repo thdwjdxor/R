@@ -1,0 +1,45 @@
+rm(list = ls())
+set.seed(100)
+
+x <- matrix(runif(300), ncol=3)
+y <- x %*% c(0.2,0.3,0.5) + rnorm(100, sd=0.2)
+xx = t(x)%*%x
+invx <- solve(xx)
+b_ols <- (invx) %*% (t(x)%*%y) #xy/xx
+e0 <- (y-x%*%b_ols)
+
+
+mod = lm(y~x+0)
+
+n <- nrow(x)
+k <- ncol(x) 
+
+# Homoscedastiicty Covariance-Matrix with degree of freedom ---------------------------------#
+# Equivalent to summary(lm) standard-error in R
+SSE=sum(e0**2)
+cov_mat = (invx * SSE) * (1/(n-k))
+
+# OR
+e = Y - X %*% b_ols
+e2 = sum(e**2)/(n-k)
+variance_matrix = invx %*% (e2 * xx) %*% invx 
+
+
+#  Covariance-Matrix with HC0  ------------------------------------------------------------#
+a = 1
+u0 = x*(e%*%matrix(1,1,k))
+v1 = a*invx %*% (t(u0)%*%u0) %*% invx
+s1 = sqrt(diag(v1))
+
+# OR
+coeftest(mod, vcov = vcovHC(mod, type = "HC0"))
+
+
+#  Covariance-Matrix with HC1  ------------------------------------------------------------#
+a = n/(n-k)
+u0 = x*(e%*%matrix(1,1,k))
+v1 = a*invx %*% (t(u0)%*%u0) %*% invx
+s1 = sqrt(diag(v1))
+s1
+
+coeftest(mod, vcov = vcovHC(mod, type = "HC1"))
