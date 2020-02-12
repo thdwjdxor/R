@@ -20,9 +20,10 @@ SSE=sum(e0**2)
 cov_mat = (invx * SSE) * (1/(n-k))
 
 # OR
-e = Y - X %*% b_ols
+e = y - x %*% b_ols
 e2 = sum(e**2)/(n-k)
 variance_matrix = invx %*% (e2 * xx) %*% invx 
+
 
 
 #  Covariance-Matrix with HC0  ------------------------------------------------------------#
