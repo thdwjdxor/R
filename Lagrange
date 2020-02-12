@@ -110,34 +110,38 @@ sol2$pars
 #-------------------------------------------------------------------------------------------------#
 # Restriction regression is same as omitted regression
 # Constrained Regression, where B1+B2+B3 = 1 : Econometrics
-X <- matrix(runif(300), ncol=3)
-Y <- X %*% c(0.2,0.3,0.5) + rnorm(100, sd=0.2)
-xx = t(X)%*%X
+x <- matrix(runif(300), ncol=3)
+y <- x %*% c(0.2,0.3,0.5) + rnorm(100, sd=0.2)
+xx = t(x)%*%x
 invx <- solve(xx)
-b_ols <- (invx) %*% (t(X)%*%Y) #xy/xx
+b_ols <- (invx) %*% (t(x)%*%y) #xy/xx
 b_ols
 
-R = matrix(rep(1,3))
-
-f1 = invx %*% R %*% solve(t(R) %*%  invx %*% R)
-f2 = t(R) %*% b_ols -1 # Where -1 is -c(or -constraaint)
-b_ols - f1 %*% f2   
-
 R = matrix(c(1,0,0))
-
+f1 = invx %*% R %*% solve(t(R) %*%  invx %*% R)
+f2 = t(R) %*% b_ols # Where -1 is -c(or -constraaint)
+b_cls = b_ols - f1 %*% f2   
+# or
 iR <- invx %*% R %*% solve(t(R)%*%invx%*%R) %*% t(R) #8.8 in book
 b_cls <- b_ols - iR%*%b_ols
-e1 <- (y-x%*%b_cls)
 
-#HC0-----------------------------------------------------------------------#
-u1 = x*(e1%*%matrix(1,1,k))
+e1 <- (y-x%*%b_cls)
+n = length(x)
+k = ncol(x)
 a1 = 1
+
+# HC0 Constrained -----------------------------------------------------------#
+u1 = x*(e1%*%matrix(1,1,k))
 v1 = a1*invx %*% (t(u1)%*%u1) %*% invx
 v_cls <- v1 - iR%*%v1 - v1%*%t(iR) +iR%*%v1%*%t(iR)
 s1 = sqrt(diag(v_cls))
 b_cls
 s1
 
+# OR
+library(sandwich)
+library(lmtest)
+mod1 = lm(y ~ x[,2:3]+0)
 coeftest(mod1, vcov = vcovHC(mod1, type = "HC0"))
 
 #HC1-----------------------------------------------------------------------#
