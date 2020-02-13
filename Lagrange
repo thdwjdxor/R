@@ -126,11 +126,23 @@ iR <- invx %*% R %*% solve(t(R)%*%invx%*%R) %*% t(R) #8.8 in book
 b_cls <- b_ols - iR%*%b_ols
 
 e1 <- (y-x%*%b_cls)
-n = length(x)
+n = dim(x)[1]
 k = ncol(x)
-a1 = 1
+
+
+# Homoscedasiticty Constrained -----------------------------------------------------------#
+diag((invx - invx %*% R %*% solve(t(R) %*% invx %*% R) %*%  t(R) %*% invx) * sum(e1**2) *(1/(n-k+1)))^(1/2)
+
+#OR
+library(sandwich)
+library(lmtest)
+mod = lm(y~x[,2:3]+0)
+diag(vcov(mod))^(1/2)
+
 
 # HC0 Constrained -----------------------------------------------------------#
+a1 = 1
+
 u1 = x*(e1%*%matrix(1,1,k))
 v1 = a1*invx %*% (t(u1)%*%u1) %*% invx
 v_cls <- v1 - iR%*%v1 - v1%*%t(iR) +iR%*%v1%*%t(iR)
